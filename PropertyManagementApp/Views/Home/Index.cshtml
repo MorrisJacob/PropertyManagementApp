@@ -1,0 +1,63 @@
+﻿@model RootModel
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<select id="Managerddl">
+    <option value="9613">RENU</option>
+    <option value="9000">Prime Home Team</option>
+</select>
+<!--The div element for the map -->
+<div class="map-wrapper">
+    <div id="map"></div>
+</div>
+
+
+
+
+<!-- prettier-ignore -->
+<script>
+    (g => { var h, a, k, p = "The Google Maps JavaScript API", c = "google", l = "importLibrary", q = "__ib__", m = document, b = window; b = b[c] || (b[c] = {}); var d = b.maps || (b.maps = {}), r = new Set, e = new URLSearchParams, u = () => h || (h = new Promise(async (f, n) => { await (a = m.createElement("script")); e.set("libraries", [...r] + ""); for (k in g) e.set(k.replace(/[A-Z]/g, t => "_" + t[0].toLowerCase()), g[k]); e.set("callback", c + ".maps." + q); a.src = `https://maps.${c}apis.com/maps/api/js?` + e; d[q] = f; a.onerror = () => h = n(Error(p + " could not load.")); a.nonce = m.querySelector("script[nonce]")?.nonce || ""; m.head.append(a) })); d[l] ? console.warn(p + " only loads once. Ignoring:", g) : d[l] = (f, ...n) => r.add(f) && u().then(() => d[l](f, ...n)) })
+        ({ key: "AIzaSyCM9Qiu9zFFHXTFQoqHD5C-StI-9JJKvAo", v: "beta" });</script>
+
+
+<script>
+
+    async function initMap() {
+        // Request needed libraries.
+        const { Map } = await google.maps.importLibrary("maps");
+        const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+
+        let position = { lat: @Model.property_data[0].latitude, lng: @Model.property_data[0].longitude };
+        let map1;
+        //Load the map
+        map = new Map(document.getElementById("map"), {
+            zoom: 8,
+            center: position,
+            mapId: "DEMO_MAP_ID",
+        });
+
+
+    
+        @for (var i = 0; i < Model.property_data.Count; i++)
+        {
+            <text>
+                position.lat = @Model.property_data[i].latitude;
+            position.lng = @Model.property_data[i].longitude;
+            // The marker
+            const pos</text>@i<text> = new AdvancedMarkerElement({
+                map: map,
+                position: position,
+                title: "@Model.property_data[i].address",
+            });
+            </text>
+        }
+    }
+
+    initMap();
+
+    $('#Managerddl').on('change', function(){
+        //TODO: make ajax call and get proper manager data based on dropdown value
+    });
+
+</script>
