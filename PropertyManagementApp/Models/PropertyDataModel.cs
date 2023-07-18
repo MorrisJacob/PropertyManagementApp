@@ -6,7 +6,7 @@ namespace PropertyManagementApp.Models
 
         public bool? favourite { get; set; }
 
-        public string? title { get; set; }
+        public string? title { get; set; } 
 
         public string? headline { get; set; }
 

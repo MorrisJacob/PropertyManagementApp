@@ -4,14 +4,19 @@
 }
 
 <select id="Managerddl">
-    <option value="9613">RENU</option>
-    <option value="9000">Prime Home Team</option>
+    <option value="All">All</option>
+    @foreach(var manager in Model.property_data.Select(s => s.manager_name).OrderBy(s => s).Distinct())
+    {
+        <option value="@manager">@manager</option>
+    }
 </select>
 <!--The div element for the map -->
 <div class="map-wrapper">
     <div id="map"></div>
 </div>
-
+<br/>
+<br/>
+<input id="btnCompetitorManagerList" type="button" value="View Non-RENU Managers" />
 
 
 
@@ -23,41 +28,121 @@
 
 <script>
 
+    var map;
+    var position;
+    //empty dictionary where we will store pins.
+    var pos = {};
     async function initMap() {
+
         // Request needed libraries.
         const { Map } = await google.maps.importLibrary("maps");
         const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
 
-        let position = { lat: @Model.property_data[0].latitude, lng: @Model.property_data[0].longitude };
-        let map1;
+        position = { lat: 38.627003, lng: -90.199402 };
         //Load the map
         map = new Map(document.getElementById("map"), {
-            zoom: 8,
+            zoom: 4,
             center: position,
             mapId: "DEMO_MAP_ID",
         });
 
-
-    
         @for (var i = 0; i < Model.property_data.Count; i++)
         {
             <text>
                 position.lat = @Model.property_data[i].latitude;
             position.lng = @Model.property_data[i].longitude;
             // The marker
-            const pos</text>@i<text> = new AdvancedMarkerElement({
+            pos[</text>@i<text>] = new AdvancedMarkerElement({
                 map: map,
                 position: position,
                 title: "@Model.property_data[i].address",
             });
+            pos[</text>@i<text>].setAttribute('manager', "@Model.property_data[i].manager_name");
             </text>
         }
     }
 
     initMap();
 
+    function clearMap() {
+        //remove map properties, thus clearing map of markers. Strange choice, but Google's official way to do this.
+        for(let i=0; i < Object.keys(pos).length; i++){
+            pos[i].map = null;
+        }
+    }
+
+    function showMarkers(manager){
+        if(manager=="All"){
+            for (let i = 0; i < Object.keys(pos).length; i++) {
+                pos[i].map = map;
+            }
+            return;
+        }
+        for (let i = 0; i < Object.keys(pos).length; i++) {
+            if(pos[i].getAttribute('manager') == manager){
+                pos[i].map = map;
+            }
+        }
+    }
+
+    function ClearDropdown(){
+        $('#Managerddl').html('');
+    }
+
+    function LoadDropdown(managerOptions){
+        ClearDropdown();
+        let options = '';
+        for(let i=0; i <= managerOptions.length; i++){
+            options += '<option value="' + managerOptions[i] + '">' + managerOptions[i] + '</option>';
+        }
+        $('#Managerddl').html(options);
+    }
+
+    async function LoadCompetitorMarkers(propertyData){
+
+        const { Map } = await google.maps.importLibrary("maps");
+        const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+
+
+        let currentIndex = Object.keys(pos).length;
+        for(let i = 0; i <= propertyData.length - 1; i++){
+            position.lat = propertyData[i].latitude;
+            position.lng = propertyData[i].longitude;
+            // The marker
+            pos[currentIndex] = new AdvancedMarkerElement({
+                map: map,
+                position: position,
+                title: propertyData[i].address,
+            });
+            pos[currentIndex].setAttribute('manager', propertyData[i].manager_name);
+            currentIndex += 1;
+        }
+    }
+
     $('#Managerddl').on('change', function(){
-        //TODO: make ajax call and get proper manager data based on dropdown value
+        //Clear map of all markers
+        clearMap();
+        //Show markers for the selected Manager Name.
+        showMarkers($(this).val());
+    });
+
+    $('#btnCompetitorManagerList').on('click', function(){
+        $(this).hide();
+        $.ajax({
+            url: '/Home/GetCompetitorProperties',
+            type: 'GET'
+        })
+        .done(function(data){
+            //get unique manager names and populate dropdown
+            let managerNames = [...new Set(data.property_data.map(item => item.manager_name))].sort();
+            LoadDropdown(managerNames);
+            //Clear map of all markers
+            clearMap();
+            
+            //TODO: Show markers for competitors
+            LoadCompetitorMarkers(data.property_data);
+            
+        });
     });
 
 </script>

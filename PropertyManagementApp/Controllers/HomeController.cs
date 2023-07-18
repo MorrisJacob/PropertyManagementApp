@@ -29,6 +29,21 @@ namespace PropertyManagementApp.Controllers
             return View("Index", RENUProperties);
         }
 
+        public async Task<RootModel> GetCompetitorProperties()
+        {
+            //Get Competitor Properties (leave search query empty)
+            string url = "https://secure.rently.com/api/properties/searchQuery";
+            string propertiesJson = "";
+            using (HttpClient client = new HttpClient())
+            {
+                propertiesJson = await client.GetStringAsync(url);
+            }
+
+            RootModel properties = JsonConvert.DeserializeObject<RootModel>(propertiesJson);
+
+            return properties;
+        }
+
         public IActionResult Privacy()
         {
             return View();
